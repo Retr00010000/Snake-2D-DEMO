@@ -157,6 +157,8 @@
   <ItemGroup>
     <None Include="default.frag" />
     <None Include="default.vert" />
+    <None Include="snake.frag" />
+    <None Include="snake.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\EBO.h" />
