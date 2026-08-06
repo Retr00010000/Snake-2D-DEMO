@@ -166,6 +166,7 @@
     <ClInclude Include="source\VBO.h" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="checkerboard.png" />
     <Image Include="RTS_Crate.png" />
     <Image Include="tera.png" />
   </ItemGroup>
