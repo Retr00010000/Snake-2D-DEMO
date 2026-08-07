@@ -14,17 +14,17 @@ using namespace std;
 #include "VBO.h"
 #include "EBO.h"
 
-// --- Grid Settings ---
+// Grid Settings
 const int GRID_WIDTH = 20;
 const int GRID_HEIGHT = 20;
 
 
-// --- Snake Data Structure ---
+// Snake Struct
 struct SnakeSegment {
     int x, y;
 };
 
-// --- Fruit Variables ---
+// Fruit Variables 
 int fruitX;
 int fruitY;
 
@@ -75,7 +75,7 @@ GLfloat fruitVertices[] = {
     TILE_WIDTH * PADDING,          TILE_HEIGHT * (1.0f - PADDING)  // Top-Left
 };
 
-// You can reuse the snakeIndices array for the fruit EBO since it's also just a square!
+// reusing the snakeIndices array for the fruit EBO since it's also just a square is also an option, but for clarity, we can define a separate one.
 
 // Quad Vertices for Full-Screen Background
 GLfloat bgVertices[] = {
@@ -108,11 +108,11 @@ int main() {
     gladLoadGL();
     glViewport(0, 0, 800, 800);
 
-    // --- LOAD SHADERS ---
+	// Load and compile shaders
     Shader shaderProgram("default.vert", "default.frag");
     Shader snakeShader("snake.vert", "snake.frag");
 
-    // --- SETUP BACKGROUND ---
+	// BACKGROUND SETUP
     VAO bgVAO;
     bgVAO.Bind();
     VBO bgVBO(bgVertices, sizeof(bgVertices));
@@ -126,7 +126,7 @@ int main() {
     Texture bgTexture("checkerboard.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
     bgTexture.texUnit(shaderProgram, "tex0", 0);
 
-    // --- SETUP SNAKE ---
+	// SNAKE SETUP
     VAO snakeVAO;
     snakeVAO.Bind();
     VBO snakeVBO(snakeVertices, sizeof(snakeVertices));
@@ -136,7 +136,7 @@ int main() {
     snakeVBO.Unbind();
     snakeEBO.Unbind();
 
-    // --- SETUP FRUIT ---
+	// FRUIT SETUP
     VAO fruitVAO;
     fruitVAO.Bind();
     VBO fruitVBO(fruitVertices, sizeof(fruitVertices));
@@ -146,14 +146,13 @@ int main() {
     fruitVBO.Unbind();
     fruitEBO.Unbind();
 
-    // --- SEED RANDOMNESS ---
+    //  SEED RANDOMNESS
     srand(time(NULL));
     SpawnFruit();
 
     // Main Game Loop
-    // Main Game Loop
     while (!glfwWindowShouldClose(window)) {
-        // --- 1. INPUT HANDLING ---
+        // 1. INPUT HANDLING
         // Only accept input if the game is still running
         if (!gameOver) {
             if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && lastMovedDir != DOWN) currentDir = UP;
@@ -161,8 +160,24 @@ int main() {
             if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && lastMovedDir != RIGHT) currentDir = LEFT;
             if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && lastMovedDir != LEFT) currentDir = RIGHT;
         }
+        else {
+            // If the game is over, check if the player pressed Enter to restart
+            if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
+                // Reset the snake to its initial 3-segment length and center position
+                snake = {
+                    {10, 10}, // Head
+                    {9, 10},  // Body 1
+                    {8, 10}   // Body 2
+                };
+                currentDir = RIGHT;
+                lastMovedDir = RIGHT;
+                SpawnFruit();
+                gameOver = false;
+                lastTime = glfwGetTime(); // Reset the timer so it doesn't instantly jump
+            }
+        }
 
-        // --- 2. GAME TICK & MOVEMENT ---
+        // 2. GAME TICK & MOVEMENT
         float currentTime = glfwGetTime();
         if (currentTime - lastTime >= moveInterval && !gameOver) {
             lastTime = currentTime;
@@ -191,7 +206,7 @@ int main() {
                 }
             }
 
-            // --- EATING LOGIC ---
+            // EATING LOGIC
             // Only eat if we haven't crashed this tick
             if (!gameOver) {
                 if (snake[0].x == fruitX && snake[0].y == fruitY) {
@@ -202,17 +217,17 @@ int main() {
             }
         }
 
-        // --- 3. CLEAR SCREEN ---
+        // 3. CLEAR SCREEN 
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // --- 4. DRAW BACKGROUND ---
+        // 4. DRAW BACKGROUND
         shaderProgram.Activate();
         bgTexture.Bind();
         bgVAO.Bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // --- 5. DRAW FRUIT AND SNAKE ---
+        // 5. DRAW FRUIT AND SNAKE 
         snakeShader.Activate();
         GLuint offsetLoc = glGetUniformLocation(snakeShader.ID, "offset");
         GLuint colorLoc = glGetUniformLocation(snakeShader.ID, "color");
