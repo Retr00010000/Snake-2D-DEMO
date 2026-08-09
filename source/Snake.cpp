@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstdlib>
 #include <ctime>
+#include <string>
 
 using namespace std;
 
@@ -18,11 +19,13 @@ using namespace std;
 const int GRID_WIDTH = 20;
 const int GRID_HEIGHT = 20;
 
-
 // Snake Struct
 struct SnakeSegment {
     int x, y;
 };
+
+// Score Variable 
+int score = 0;
 
 // Fruit Variables 
 int fruitX;
@@ -34,6 +37,7 @@ void SpawnFruit() {
 }
 
 // Start the snake with 3 segments in the middle of the grid
+
 vector<SnakeSegment> snake = {
     {10, 10}, // Head
     {9, 10},  // Body 1
@@ -44,7 +48,7 @@ vector<SnakeSegment> snake = {
 const float TILE_WIDTH = 2.0f / GRID_WIDTH;
 const float TILE_HEIGHT = 2.0f / GRID_HEIGHT;
 
-// --- Snake Movement Variables ---
+// Snake Movement Variables
 enum Direction { UP, DOWN, LEFT, RIGHT };
 Direction currentDir = RIGHT;      // The direction the player WANTS to go
 Direction lastMovedDir = RIGHT;    // The direction the snake ACTUALLY moved last tick
@@ -152,102 +156,132 @@ int main() {
 
     // Main Game Loop
     while (!glfwWindowShouldClose(window)) {
-        // 1. INPUT HANDLING
-        // Only accept input if the game is still running
+        // --- 1. INPUT HANDLING ---
         if (!gameOver) {
-            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && lastMovedDir != DOWN) currentDir = UP;
-            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && lastMovedDir != UP) currentDir = DOWN;
-            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && lastMovedDir != RIGHT) currentDir = LEFT;
-            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && lastMovedDir != LEFT) currentDir = RIGHT;
+            if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && lastMovedDir != DOWN) {
+                currentDir = UP;
+            }
+            if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS && lastMovedDir != UP) {
+                currentDir = DOWN;
+            }
+            if (glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS && lastMovedDir != RIGHT) {
+                currentDir = LEFT;
+            }
+            if (glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS && lastMovedDir != LEFT) {
+                currentDir = RIGHT;
+            }
         }
         else {
-            // If the game is over, check if the player pressed Enter to restart
             if (glfwGetKey(window, GLFW_KEY_ENTER) == GLFW_PRESS) {
-                // Reset the snake to its initial 3-segment length and center position
                 snake = {
-                    {10, 10}, // Head
-                    {9, 10},  // Body 1
-                    {8, 10}   // Body 2
+                    {10, 10}, {9, 10}, {8, 10}
                 };
                 currentDir = RIGHT;
                 lastMovedDir = RIGHT;
                 SpawnFruit();
+                score = 0;
+                cout << "Game Restarted! Score: " << score << endl;
+
+                // Reset title bar on restart
+                glfwSetWindowTitle(window, "Snake - Score: 0");
+
                 gameOver = false;
-                lastTime = glfwGetTime(); // Reset the timer so it doesn't instantly jump
+                lastTime = glfwGetTime();
             }
         }
 
-        // 2. GAME TICK & MOVEMENT
+        // --- 2. GAME TICK & MOVEMENT ---
         float currentTime = glfwGetTime();
         if (currentTime - lastTime >= moveInterval && !gameOver) {
             lastTime = currentTime;
 
-            // Shift the body segments
-            for (int i = snake.size() - 1; i > 0; i--) {
+            for (int i = (int)snake.size() - 1; i > 0; i--) {
                 snake[i] = snake[i - 1];
             }
 
-            // Move the head
-            if (currentDir == UP) snake[0].y += 1;
-            if (currentDir == DOWN) snake[0].y -= 1;
-            if (currentDir == LEFT) snake[0].x -= 1;
-            if (currentDir == RIGHT) snake[0].x += 1;
-
-            // --- COLLISION CHECKS ---
-            // A. Check Wall Collision (Has the head left the 0-19 grid?)
-            if (snake[0].x < 0 || snake[0].x >= GRID_WIDTH || snake[0].y < 0 || snake[0].y >= GRID_HEIGHT) {
-                gameOver = true;
+            if (currentDir == UP) {
+                snake[0].y += 1;
+            }
+            if (currentDir == DOWN) {
+                snake[0].y -= 1;
+            }
+            if (currentDir == LEFT) {
+                snake[0].x -= 1;
+            }
+            if (currentDir == RIGHT) {
+                snake[0].x += 1;
             }
 
-            // B. Check Body Collision (Did the head overlap with any body segment?)
-            for (int i = 1; i < snake.size(); i++) {
+            // --- COLLISION CHECKS ---
+            bool justDied = false;
+
+            if (snake[0].x < 0 || snake[0].x >= GRID_WIDTH || snake[0].y < 0 || snake[0].y >= GRID_HEIGHT) {
+                justDied = true;
+            }
+            for (int i = 1; i < (int)snake.size(); i++) {
                 if (snake[0].x == snake[i].x && snake[0].y == snake[i].y) {
-                    gameOver = true;
+                    justDied = true;
                 }
             }
 
-            // EATING LOGIC
-            // Only eat if we haven't crashed this tick
+            // --- GAME OVER TRIGGER ---
+            if (justDied) {
+                gameOver = true;
+                cout << "\n=== GAME OVER ===" << endl;
+                cout << "Final Score: " << score << endl;
+                cout << "Press ENTER to restart!\n" << endl;
+            }
+
+            // --- EATING LOGIC ---
             if (!gameOver) {
                 if (snake[0].x == fruitX && snake[0].y == fruitY) {
                     snake.push_back(snake.back());
                     SpawnFruit();
+                    score += 20;
+                    cout << "Score: " << score << endl;
+
+                    // Update the window title with the new score
+                    string title = "Snake - Score: " + to_string(score);
+                    glfwSetWindowTitle(window, title.c_str());
                 }
                 lastMovedDir = currentDir;
             }
         }
 
-        // 3. CLEAR SCREEN 
+        // --- 3. CLEAR SCREEN ---
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // 4. DRAW BACKGROUND
+        // --- 4. DRAW BACKGROUND ---
         shaderProgram.Activate();
         bgTexture.Bind();
         bgVAO.Bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // 5. DRAW FRUIT AND SNAKE 
+        // --- 5. DRAW FRUIT AND SNAKE ---
         snakeShader.Activate();
         GLuint offsetLoc = glGetUniformLocation(snakeShader.ID, "offset");
         GLuint colorLoc = glGetUniformLocation(snakeShader.ID, "color");
 
-        // Draw Fruit (Yellow)
-        // If the game is over, we can turn the fruit Red or just leave it Yellow!
+        // Draw Game Fruit
         fruitVAO.Bind();
-        if (gameOver) glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); // Turns red on death
-        else glUniform3f(colorLoc, 1.0f, 1.0f, 0.0f);
+        if (gameOver) {
+            glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); // Turns red on death
+        }
+        else {
+            glUniform3f(colorLoc, 1.0f, 1.0f, 0.0f);
+        }
 
         float fruitNdcX = -1.0f + (fruitX * TILE_WIDTH);
         float fruitNdcY = -1.0f + (fruitY * TILE_HEIGHT);
         glUniform2f(offsetLoc, fruitNdcX, fruitNdcY);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // Draw Snake
+        // --- 7. DRAW SNAKE ---
         snakeVAO.Bind();
         glUniform3f(colorLoc, 0.0f, 0.0f, 139.0f / 255.0f);
 
-        for (int i = 0; i < snake.size(); i++) {
+        for (int i = 0; i < (int)snake.size(); i++) {
             float ndcX = -1.0f + (snake[i].x * TILE_WIDTH);
             float ndcY = -1.0f + (snake[i].y * TILE_HEIGHT);
 
@@ -258,7 +292,6 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
     // Cleanup
     bgVAO.Delete();
     bgVBO.Delete();
