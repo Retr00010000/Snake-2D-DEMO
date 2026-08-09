@@ -49,6 +49,7 @@ const float TILE_WIDTH = 2.0f / GRID_WIDTH;
 const float TILE_HEIGHT = 2.0f / GRID_HEIGHT;
 
 // Snake Movement Variables
+
 enum Direction { UP, DOWN, LEFT, RIGHT };
 Direction currentDir = RIGHT;      // The direction the player WANTS to go
 Direction lastMovedDir = RIGHT;    // The direction the snake ACTUALLY moved last tick
@@ -72,6 +73,7 @@ GLuint snakeIndices[] = {
 
 // A smaller square for the fruit, centered inside a grid tile
 const float PADDING = 0.25f; // Leaves 25% empty space on all sides
+
 GLfloat fruitVertices[] = {
     TILE_WIDTH * PADDING,          TILE_HEIGHT * PADDING,          // Bottom-Left
     TILE_WIDTH * (1.0f - PADDING), TILE_HEIGHT * PADDING,          // Bottom-Right
@@ -156,7 +158,7 @@ int main() {
 
     // Main Game Loop
     while (!glfwWindowShouldClose(window)) {
-        // --- 1. INPUT HANDLING ---
+        // 1. INPUT HANDLING
         if (!gameOver) {
             if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS && lastMovedDir != DOWN) {
                 currentDir = UP;
@@ -190,7 +192,7 @@ int main() {
             }
         }
 
-        // --- 2. GAME TICK & MOVEMENT ---
+        // 2. GAME TICK & MOVEMENT 
         float currentTime = glfwGetTime();
         if (currentTime - lastTime >= moveInterval && !gameOver) {
             lastTime = currentTime;
@@ -212,7 +214,7 @@ int main() {
                 snake[0].x += 1;
             }
 
-            // --- COLLISION CHECKS ---
+            // COLLISION CHECKS
             bool justDied = false;
 
             if (snake[0].x < 0 || snake[0].x >= GRID_WIDTH || snake[0].y < 0 || snake[0].y >= GRID_HEIGHT) {
@@ -224,7 +226,7 @@ int main() {
                 }
             }
 
-            // --- GAME OVER TRIGGER ---
+            // GAME OVER TRIGGER
             if (justDied) {
                 gameOver = true;
                 cout << "\n=== GAME OVER ===" << endl;
@@ -232,7 +234,7 @@ int main() {
                 cout << "Press ENTER to restart!\n" << endl;
             }
 
-            // --- EATING LOGIC ---
+            // EATING LOGIC
             if (!gameOver) {
                 if (snake[0].x == fruitX && snake[0].y == fruitY) {
                     snake.push_back(snake.back());
@@ -248,22 +250,22 @@ int main() {
             }
         }
 
-        // --- 3. CLEAR SCREEN ---
+        // 3. CLEAR SCREEN 
         glClearColor(0.07f, 0.13f, 0.17f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // --- 4. DRAW BACKGROUND ---
+        // 4. DRAW BACKGROUND 
         shaderProgram.Activate();
         bgTexture.Bind();
         bgVAO.Bind();
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // --- 5. DRAW FRUIT AND SNAKE ---
+        // 5. DRAW FRUIT AND SNAKE 
         snakeShader.Activate();
         GLuint offsetLoc = glGetUniformLocation(snakeShader.ID, "offset");
         GLuint colorLoc = glGetUniformLocation(snakeShader.ID, "color");
 
-        // Draw Game Fruit
+		// 6. DRAW FRUIT 
         fruitVAO.Bind();
         if (gameOver) {
             glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); // Turns red on death
@@ -277,7 +279,7 @@ int main() {
         glUniform2f(offsetLoc, fruitNdcX, fruitNdcY);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
-        // --- 7. DRAW SNAKE ---
+        //  7. DRAW SNAKE 
         snakeVAO.Bind();
         glUniform3f(colorLoc, 0.0f, 0.0f, 139.0f / 255.0f);
 
