@@ -27,22 +27,58 @@ struct SnakeSegment {
 // Score Variable 
 int score = 0;
 
-// Fruit Variables 
-int fruitX;
-int fruitY;
-
-void SpawnFruit() {
-    fruitX = rand() % GRID_WIDTH;
-    fruitY = rand() % GRID_HEIGHT;
-}
-
-// Start the snake with 3 segments in the middle of the grid
-
 vector<SnakeSegment> snake = {
     {10, 10}, // Head
     {9, 10},  // Body 1
     {8, 10}   // Body 2
 };
+
+
+// Fruit Variables 
+struct Fruit {
+    int x, y;
+};
+
+Fruit fruits[2]; // An array that holds exactly two fruits
+
+// Pass in the index (0 or 1) of the fruit we want to spawn
+void SpawnFruit(int index) {
+    bool validPosition = false;
+
+    while (!validPosition) {
+        fruits[index].x = rand() % GRID_WIDTH;
+        fruits[index].y = rand() % GRID_HEIGHT;
+        validPosition = true;
+
+        // 1. Check if it spawned inside the snake
+        for (int i = 0; i < (int)snake.size(); i++) {
+            if (snake[i].x == fruits[index].x && snake[i].y == fruits[index].y) {
+                validPosition = false;
+                break;
+            }
+        }
+
+        // 2. Check if it spawned on top of the OTHER fruit
+        int otherIndex = 0;
+        if (index == 0) {
+            otherIndex = 1;
+        }
+
+        if (fruits[index].x == fruits[otherIndex].x && fruits[index].y == fruits[otherIndex].y) {
+            validPosition = false;
+        }
+    }
+}
+
+// Helper to spawn both at the start
+void InitFruits() {
+    fruits[0] = { -1, -1 }; // Push off-grid temporarily
+    fruits[1] = { -1, -1 };
+    SpawnFruit(0);
+    SpawnFruit(1);
+}
+
+// Start the snake with 3 segments in the middle of the grid
 
 // Calculate exactly how big one tile is in Normalized Device Coordinates (-1.0 to 1.0)
 const float TILE_WIDTH = 2.0f / GRID_WIDTH;
@@ -59,7 +95,9 @@ float moveInterval = 0.15f;        // How fast the snake moves (0.15 seconds per
 bool gameOver = false;
 
 // A single square exactly the size of one grid tile, starting at (0,0)
-GLfloat snakeVertices[] = {
+
+GLfloat snakeVertices[]= 
+{
     0.0f,        0.0f,        // Bottom-Left
     TILE_WIDTH,  0.0f,        // Bottom-Right
     TILE_WIDTH,  TILE_HEIGHT, // Top-Right
@@ -98,6 +136,7 @@ GLuint bgIndices[] = {
 };
 
 int main() {
+
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
@@ -153,8 +192,9 @@ int main() {
     fruitEBO.Unbind();
 
     //  SEED RANDOMNESS
-    srand(time(NULL));
-    SpawnFruit();
+
+    srand((unsigned int)time(NULL));
+    InitFruits();
 
     // Main Game Loop
     while (!glfwWindowShouldClose(window)) {
@@ -180,7 +220,7 @@ int main() {
                 };
                 currentDir = RIGHT;
                 lastMovedDir = RIGHT;
-                SpawnFruit();
+                InitFruits();
                 score = 0;
                 cout << "Game Restarted! Score: " << score << endl;
 
@@ -193,7 +233,8 @@ int main() {
         }
 
         // 2. GAME TICK & MOVEMENT 
-        float currentTime = glfwGetTime();
+
+        float currentTime = (float)glfwGetTime();
         if (currentTime - lastTime >= moveInterval && !gameOver) {
             lastTime = currentTime;
 
@@ -235,16 +276,20 @@ int main() {
             }
 
             // EATING LOGIC
-            if (!gameOver) {
-                if (snake[0].x == fruitX && snake[0].y == fruitY) {
-                    snake.push_back(snake.back());
-                    SpawnFruit();
-                    score += 20;
-                    cout << "Score: " << score << endl;
 
-                    // Update the window title with the new score
-                    string title = "Snake - Score: " + to_string(score);
-                    glfwSetWindowTitle(window, title.c_str());
+            if (!gameOver) {
+                for (int f = 0; f < 2; f++) {
+                    if (snake[0].x == fruits[f].x && snake[0].y == fruits[f].y) {
+                        snake.push_back(snake.back());
+                        SpawnFruit(f); // Only respawn the specific fruit we just ate
+                        score += 20;
+                        cout << "Score: " << score << endl;
+
+                        string title = "Snake - Score: " + to_string(score);
+                        glfwSetWindowTitle(window, title.c_str());
+
+                        break; // Stop checking; we can only eat one fruit per tick
+                    }
                 }
                 lastMovedDir = currentDir;
             }
@@ -265,7 +310,7 @@ int main() {
         GLuint offsetLoc = glGetUniformLocation(snakeShader.ID, "offset");
         GLuint colorLoc = glGetUniformLocation(snakeShader.ID, "color");
 
-		// 6. DRAW FRUIT 
+        // 6. DRAW FRUITS 
         fruitVAO.Bind();
         if (gameOver) {
             glUniform3f(colorLoc, 1.0f, 0.0f, 0.0f); // Turns red on death
@@ -274,12 +319,15 @@ int main() {
             glUniform3f(colorLoc, 1.0f, 1.0f, 0.0f);
         }
 
-        float fruitNdcX = -1.0f + (fruitX * TILE_WIDTH);
-        float fruitNdcY = -1.0f + (fruitY * TILE_HEIGHT);
-        glUniform2f(offsetLoc, fruitNdcX, fruitNdcY);
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        // Loop through and draw both fruits from the array
+        for (int f = 0; f < 2; f++) {
+            float fruitNdcX = -1.0f + (fruits[f].x * TILE_WIDTH);
+            float fruitNdcY = -1.0f + (fruits[f].y * TILE_HEIGHT);
+            glUniform2f(offsetLoc, fruitNdcX, fruitNdcY);
+            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+        }
 
-        //  7. DRAW SNAKE 
+        // 7. DRAW SNAKE 
         snakeVAO.Bind();
         glUniform3f(colorLoc, 0.0f, 0.0f, 139.0f / 255.0f);
 
