@@ -1,7 +1,7 @@
 #include <iostream>
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
-#include <stb/stb_image.h>
+#include <stb_image.h>
 #include <vector>
 #include <cstdlib>
 #include <ctime>
@@ -154,8 +154,8 @@ int main() {
     glViewport(0, 0, 800, 800);
 
 	// Load and compile shaders
-    Shader shaderProgram("default.vert", "default.frag");
-    Shader snakeShader("snake.vert", "snake.frag");
+    Shader shaderProgram("assets/shaders/default.vert", "assets/shaders/default.frag");
+    Shader snakeShader("assets/shaders/snake.vert", "assets/shaders/snake.frag");
 
 	// BACKGROUND SETUP
     VAO bgVAO;
@@ -168,7 +168,7 @@ int main() {
     bgVBO.Unbind();
     bgEBO.Unbind();
 
-    Texture bgTexture("checkerboard.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
+    Texture bgTexture("assets/textures/checkerboard.png", GL_TEXTURE_2D, GL_TEXTURE0, GL_RGBA, GL_UNSIGNED_BYTE);
     bgTexture.texUnit(shaderProgram, "tex0", 0);
 
 	// SNAKE SETUP

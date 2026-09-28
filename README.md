@@ -1,5 +1,28 @@
-# Snake 2D
+# Snake 2D (OpenGL)
 
-A classic video game where you guide a continuous line representing a snake (Needs more updates)
+A classic 2D Snake game built with C++, OpenGL 4.6, and GLFW.
 
-<img width="790" height="796" alt="Screenshot 2026-08-07 235427" src="https://github.com/user-attachments/assets/60c13a14-92a0-4e70-bbf3-529ef6827e28" />
+## Features
+- Smooth 2D grid rendering using modern OpenGL shaders
+- Checkerboard grid background
+- Score tracking and dynamic window title updates
+- Self-contained, lightweight build using MinGW-w64 (GCC)
+
+## Project Structure
+- `source/Snake.cpp` - Game logic, loop, and input handling
+- `source/engine/` - OpenGL boilerplate (VAO, VBO, EBO, Texture, Shaders)
+- `assets/` - Shaders (`.vert`, `.frag`) and textures (`.png`)
+- `Dependencies/` - GLFW headers and MinGW library, GLAD, and stb_image
+- `build.ps1` - PowerShell script to build and launch the game
+
+## How to Build and Run
+
+### In VS Code
+1. Open the project folder in VS Code.
+2. Press `F5` to build and launch.
+
+### In Terminal (PowerShell)
+```powershell
+.\build.ps1
+```
+*(Requires MinGW-w64 `g++`)*
