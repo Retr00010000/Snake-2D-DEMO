@@ -46,6 +46,7 @@ $sources = @(
 $exe = Join-Path $outDir "Snake.exe"
 $compileArgs = @(
     "-std=c++20",
+    "-mwindows",
     "-static",
     "-static-libgcc",
     "-static-libstdc++",
