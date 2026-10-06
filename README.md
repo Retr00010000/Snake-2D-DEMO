@@ -25,7 +25,7 @@ A classic, fast-paced arcade Snake game engineered from scratch in **C++20** and
 ## ⚙️ How the Game Runs
 
 ### 1. 🔄 The Game Loop & Discrete Tick Timing
-* **Fixed-Interval Tick Architecture:** Rather than moving continuously every frame, the simulation is regulated by a discrete move accumulator (`moveInterval = 0.15s` $\approx$ 6.67 ticks/second) using `glfwGetTime()`. Input is registered instantaneously, but segment translation is locked to clock ticks to preserve clean grid alignment.
+* **Fixed-Interval Tick Architecture:** Rather than moving continuously every frame, the simulation is regulated by a discrete move accumulator (`moveInterval = 0.15s` ≈ 6.67 ticks/second) using `glfwGetTime()`. Input is registered instantaneously, but segment translation is locked to clock ticks to preserve clean grid alignment.
 * **Separation of Concerns:** Each iteration of the main loop sequentially executes:
   1. **Input Polling:** Reads keyboard state via GLFW and queues direction changes while preventing invalid 180-degree reversals.
   2. **Movement & Tail Simulation:** Shifts each body segment into the preceding segment's position, then translates the head in the active direction.
@@ -35,22 +35,20 @@ A classic, fast-paced arcade Snake game engineered from scratch in **C++20** and
   6. **Buffer Swapping:** Swaps front and back buffers via double-buffering for flicker-free rendering.
 
 ### 2. 📐 Normalized Coordinate Space (NDC) & Grid Mapping
-The entire arena operates in OpenGL **Normalized Device Coordinates (NDC)** spanning `[-1.0, 1.0]` across both axes:
-* **Grid Resolution:** $20 \times 20$ cells.
-* **Tile Dimensions:** 
-  $$\text{TILE\_WIDTH} = \frac{2.0}{20} = 0.10 \quad \text{NDC}$$
-  $$\text{TILE\_HEIGHT} = \frac{2.0}{20} = 0.10 \quad \text{NDC}$$
-* **Mathematical Grid-to-NDC Projection:**
-  $$\text{ndcX} = -1.0 + (x \times \text{TILE\_WIDTH})$$
-  $$\text{ndcY} = -1.0 + (y \times \text{TILE\_HEIGHT})$$
-* **Perimeter Walls:** Off-screen boundary triggers when $x < 0$, $x \ge 20$, $y < 0$, or $y \ge 20$.
+* The entire arena operates in OpenGL **Normalized Device Coordinates (NDC)** ranging from `[-1.0, 1.0]` across both axes:
+  * **Grid Resolution:** 20×20 cells.
+  * **Tile Dimensions:** `TILE_WIDTH = 0.10` NDC, `TILE_HEIGHT = 0.10` NDC (`2.0 / 20 = 0.10`).
+  * **Grid-to-NDC Coordinate Mapping:**
+    * `ndcX = -1.0 + (gridX * TILE_WIDTH)`
+    * `ndcY = -1.0 + (gridY * TILE_HEIGHT)`
+  * **Perimeter Boundaries:** Off-screen boundary triggers when `x < 0`, `x >= 20`, `y < 0`, or `y >= 20`.
 
 ### 3. 🎨 Modern OpenGL Rendering Pipeline
 * **Core Profile 4.6:** Zero reliance on deprecated legacy immediate-mode (`glBegin`/`glEnd`). All geometry is represented through Vertex Array Objects (**VAO**), Vertex Buffer Objects (**VBO**), and Element Buffer Objects (**EBO**).
 * **Two Specialized GLSL Shaders:**
   * `default.vert` & `default.frag`: Renders the full-screen quad textured with `checkerboard.png`. Texture coordinates are scaled to `2.5f` to produce repeating checkerboard tiling.
   * `snake.vert` & `snake.frag`: Geometry pass using a single reusable unit tile quad transformed via `uniform vec2 offset` and colored via `uniform vec3 color`.
-* **Padded Fruit Geometry:** While snake segments fill the entire $0.10 \times 0.10$ tile, fruit vertices apply a 25% inward padding (`PADDING = 0.25f`), creating centered gems that are visually distinct from the snake body.
+* **Padded Fruit Geometry:** While snake segments fill the entire `0.10 x 0.10` tile, fruit vertices apply a 25% inward padding (`PADDING = 0.25f`), creating centered gems that are visually distinct from the snake body.
 
 ---
 
@@ -61,7 +59,7 @@ The entire arena operates in OpenGL **Normalized Device Coordinates (NDC)** span
 * **Intelligent Spawn Validation:** The `SpawnFruit(index)` generator guarantees that:
   1. A fruit never spawns inside any segment of the snake's body.
   2. Fruit 0 and Fruit 1 never spawn on top of each other.
-* **Selective Respawning:** When the snake eats fruit $f$, only that specific fruit is relocated, keeping the other fruit intact on the board.
+* **Selective Respawning:** When the snake eats a fruit, only that specific fruit is relocated, keeping the other fruit intact on the board.
 
 ### 🛡️ 2. Anti-Suicide Direction Locking
 * In naive Snake implementations, pressing an opposite direction (e.g., Left while moving Right) can instantly cause self-collision.
