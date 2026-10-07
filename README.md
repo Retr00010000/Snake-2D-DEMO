@@ -10,6 +10,14 @@ A classic, fast-paced arcade Snake game engineered from scratch in **C++20** and
 
 ---
 
+## 📸 In-Game Preview
+
+![Snake 2D Gameplay](assets/gameplay.png)
+
+*Real-time gameplay showcasing procedural NDC grid geometry, dual fruit spawning, checkerboard arena floor, and dynamic tail growth.*
+
+---
+
 ## 🕹️ Controls & Hotkeys
 
 | Action / Player | Keybinding | Description |
@@ -82,6 +90,7 @@ A classic, fast-paced arcade Snake game engineered from scratch in **C++20** and
 ```text
 Snake-2D-DEMO/
 ├── assets/
+│   ├── gameplay.png              # In-game preview screenshot
 │   ├── shaders/
 │   │   ├── default.vert          # Checkerboard backdrop vertex shader
 │   │   ├── default.frag          # Texture sampler fragment shader
